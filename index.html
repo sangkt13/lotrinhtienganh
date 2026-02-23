@@ -391,27 +391,41 @@
     function saveLocalLogs(logs){ localStorage.setItem(LS_KEY, JSON.stringify(logs)); }
 
     async function loadCloudLogs(){
-      const r = await fetch(`/api/logs?user=${encodeURIComponent(USER_ID)}`);
-      const data = await r.json();
-      if (!r.ok || !data.ok) throw new Error(data?.error || "Cloud GET failed");
+      const resp = await fetch(`/api/logs?user=${encodeURIComponent(USER_ID)}`);
+      const raw = await resp.text();
+      let data = null;
+      try { data = JSON.parse(raw); } catch {
+        throw new Error(`Server returned non-JSON:\n${raw.slice(0, 300)}`);
+      }
+      if (!resp.ok || !data.ok) throw new Error(data?.error || `HTTP ${resp.status}`);
       return Array.isArray(data.logs) ? data.logs : [];
     }
 
     async function saveCloudLogs(logs){
-      const r = await fetch(`/api/logs?user=${encodeURIComponent(USER_ID)}`, {
+      const resp = await fetch(`/api/logs?user=${encodeURIComponent(USER_ID)}`, {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify({ logs })
       });
-      const data = await r.json();
-      if (!r.ok || !data.ok) throw new Error(data?.error || "Cloud POST failed");
+
+      const raw = await resp.text();
+      let data = null;
+      try { data = JSON.parse(raw); } catch {
+        throw new Error(`Server returned non-JSON:\n${raw.slice(0, 300)}`);
+      }
+
+      if (!resp.ok || !data.ok) throw new Error(data?.error || `HTTP ${resp.status}`);
       return data;
     }
 
     async function deleteCloudLogs(){
-      const r = await fetch(`/api/logs?user=${encodeURIComponent(USER_ID)}`, { method:"DELETE" });
-      const data = await r.json();
-      if (!r.ok || !data.ok) throw new Error(data?.error || "Cloud DELETE failed");
+      const resp = await fetch(`/api/logs?user=${encodeURIComponent(USER_ID)}`, { method:"DELETE" });
+      const raw = await resp.text();
+      let data = null;
+      try { data = JSON.parse(raw); } catch {
+        throw new Error(`Server returned non-JSON:\n${raw.slice(0, 300)}`);
+      }
+      if (!resp.ok || !data.ok) throw new Error(data?.error || `HTTP ${resp.status}`);
       return true;
     }
 
@@ -523,7 +537,10 @@
         updateReviewStats();
         setCloudStatus(`Đã tải Blob (${logs.length} dòng).`, "ok");
       }catch(e){
-        setCloudStatus("Lỗi tải Blob: " + String(e.message||e), "err");
+        const logs = loadLocalLogs();
+        renderLogsToTable(logs);
+        updateReviewStats();
+        setCloudStatus("Không tải được Blob, dùng Local. (" + String(e.message||e) + ")", "err");
       }
     }
 
@@ -541,7 +558,13 @@
           headers:{ "Content-Type":"application/json" },
           body: JSON.stringify({ logs, userGoal:"IELTS 5.0→6.0", band:"5.0→6.0" })
         });
-        const data = await resp.json();
+
+        const raw = await resp.text();
+        let data = null;
+        try { data = JSON.parse(raw); } catch {
+          throw new Error(`AI returned non-JSON:\n${raw.slice(0, 300)}`);
+        }
+
         if(!resp.ok || !data.ok) throw new Error(data?.error || "AI request failed");
 
         const s = data.suggestion;
@@ -628,7 +651,7 @@
         const logs = loadLocalLogs();
         renderLogsToTable(logs);
         updateReviewStats();
-        setCloudStatus("Không tải được Blob, dùng Local.", "err");
+        setCloudStatus("Không tải được Blob, dùng Local. (" + String(e.message||e) + ")", "err");
       }
     });
   </script>
