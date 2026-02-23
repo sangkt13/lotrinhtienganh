@@ -1,9 +1,4 @@
 // api/ai-suggestion.js
-// Vercel Serverless Function (Node runtime)
-// ✅ Put OPENAI_API_KEY in Vercel ENV settings (Production + Preview + Development)
-// ✅ Frontend calls POST /api/ai-suggestion
-// ✅ No API key exposed to client
-
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -48,24 +43,14 @@ Task:
     });
 
     const data = await r.json();
-    if (!r.ok) {
-      return res.status(r.status).json({ ok: false, error: "OpenAI error", details: data });
-    }
+    if (!r.ok) return res.status(r.status).json({ ok: false, error: "OpenAI error", details: data });
 
-    const text =
-      data.output_text ||
-      (data.output?.[0]?.content?.[0]?.text) ||
-      "";
+    const text = data.output_text || (data.output?.[0]?.content?.[0]?.text) || "";
 
     let parsed = null;
     try { parsed = JSON.parse(text); } catch {}
 
-    return res.status(200).json({
-      ok: true,
-      raw: text,
-      suggestion: parsed
-    });
-
+    return res.status(200).json({ ok: true, raw: text, suggestion: parsed });
   } catch (err) {
     return res.status(500).json({ ok: false, error: "Server error", details: String(err) });
   }
