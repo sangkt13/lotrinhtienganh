@@ -1,10 +1,24 @@
 // api/logs.js
-import { kv } from "@vercel/kv";
+import { put, del, head } from "@vercel/blob";
 
-// Mỗi thiết bị/user có thể dùng 1 key.
-// Tạm thời: dùng "default" để chạy ngay.
-// Nếu sau này bạn làm login, bạn chỉ cần thay userId theo session/email.
-const keyOf = (userId = "default") => `ieltsflow:logs:${userId}`;
+const pathnameOf = (userId = "default") => `ieltsflow/logs/${userId}.json`;
+
+async function readJsonBody(req) {
+  // Vercel có thể đã parse sẵn:
+  if (req.body && typeof req.body === "object") return req.body;
+
+  // Parse thủ công:
+  const chunks = [];
+  for await (const chunk of req) chunks.push(chunk);
+  const raw = Buffer.concat(chunks).toString("utf8");
+
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch {
+    throw new Error("Invalid JSON body");
+  }
+}
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -14,32 +28,66 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
 
   const userId = (req.query?.user || "default").toString();
-  const kvKey = keyOf(userId);
+  const pathname = pathnameOf(userId);
 
   try {
+    // GET
     if (req.method === "GET") {
-      const logs = (await kv.get(kvKey)) || [];
-      return res.status(200).json({ ok: true, logs });
+      let info;
+      try {
+        info = await head(pathname);
+      } catch {
+        return res.status(200).json({ ok: true, logs: [], exists: false });
+      }
+
+      const r = await fetch(info.url);
+      const text = await r.text();
+
+      let logs = [];
+      try {
+        const data = JSON.parse(text);
+        logs = Array.isArray(data) ? data : (Array.isArray(data.logs) ? data.logs : []);
+      } catch {
+        logs = [];
+      }
+
+      return res.status(200).json({ ok: true, logs, exists: true, url: info.url });
     }
 
+    // POST
     if (req.method === "POST") {
-      const { logs } = req.body || {};
+      const body = await readJsonBody(req);
+      const logs = body?.logs;
+
       if (!Array.isArray(logs)) {
         return res.status(400).json({ ok: false, error: "Body must include { logs: [] }" });
       }
-      // Giới hạn tránh quá lớn (tuỳ bạn)
-      const trimmed = logs.slice(0, 1000);
-      await kv.set(kvKey, trimmed);
-      return res.status(200).json({ ok: true, saved: trimmed.length });
+
+      const trimmed = logs.slice(0, 2000);
+      const json = JSON.stringify(trimmed);
+
+      const blob = await put(pathname, json, {
+        access: "public",
+        contentType: "application/json",
+        addRandomSuffix: false
+      });
+
+      return res.status(200).json({ ok: true, saved: trimmed.length, url: blob.url });
     }
 
+    // DELETE
     if (req.method === "DELETE") {
-      await kv.del(kvKey);
+      try { await del(pathname); } catch {}
       return res.status(200).json({ ok: true });
     }
 
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   } catch (err) {
-    return res.status(500).json({ ok: false, error: "Server error", details: String(err) });
+    // QUAN TRỌNG: luôn trả JSON
+    return res.status(500).json({
+      ok: false,
+      error: "Server error",
+      details: String(err?.message || err)
+    });
   }
 }
