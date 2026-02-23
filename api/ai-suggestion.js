@@ -8,11 +8,10 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method not allowed" });
 
   try {
-    const { logs = [], userGoal = "Improve IELTS overall", band = "5.0→6.0" } = req.body || {};
-
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) return res.status(500).json({ ok: false, error: "Missing OPENAI_API_KEY on server" });
 
+    const { logs = [], userGoal = "Improve IELTS overall", band = "5.0→6.0" } = req.body || {};
     const shortLogs = Array.isArray(logs) ? logs.slice(0, 30) : [];
 
     const prompt = `
@@ -45,8 +44,7 @@ Task:
     const data = await r.json();
     if (!r.ok) return res.status(r.status).json({ ok: false, error: "OpenAI error", details: data });
 
-    const text = data.output_text || (data.output?.[0]?.content?.[0]?.text) || "";
-
+    const text = data.output_text || "";
     let parsed = null;
     try { parsed = JSON.parse(text); } catch {}
 
