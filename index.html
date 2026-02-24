@@ -1,659 +1,534 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>IELTS Tracker Pro - Nhật Ký & Review</title>
-
+  <title>IELTSFlow Pro • Nhật Ký Thông Minh</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Quicksand', sans-serif; scroll-behavior: smooth; }
-    .blob-shape { animation: morph 8s ease-in-out infinite; border-radius: 60% 40% 30% 70%/60% 30% 70% 40%; }
-    @keyframes morph {
-      0% { border-radius: 60% 40% 30% 70%/60% 30% 70% 40%; }
-      50% { border-radius: 30% 60% 70% 40%/50% 60% 30% 60%; }
-      100% { border-radius: 60% 40% 30% 70%/60% 30% 70% 40%; }
-    }
-    .glass-card { background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
-    .nav-item { position: relative; }
-    .nav-item::after { content:''; position:absolute; width:0; height:2px; bottom:-4px; left:0; background-color:#4F46E5; transition:width .3s ease-in-out; }
-    .nav-item:hover::after { width:100%; }
-
-    .sheet-table th {
-      background:#F8FAFC; color:#64748B; font-weight:600; text-transform:uppercase;
-      font-size:.75rem; letter-spacing:.05em; padding:12px 16px; border-bottom:2px solid #E2E8F0;
-    }
-    .sheet-table td { padding:16px; border-bottom:1px solid #F1F5F9; color:#334155; font-size:.9rem; }
-    .sheet-table tr:last-child td { border-bottom:none; }
-    .sheet-table tr:hover { background:#F8FAFC; }
-
-    @keyframes fadeIn { from {opacity:0; transform:translateY(5px);} to {opacity:1; transform:translateY(0);} }
-    .animate-fade-in { animation: fadeIn .5s ease-out forwards; }
-    .skill-progress-bar { transition: width 1s ease-in-out; }
+    body { font-family: 'Inter', sans-serif; }
+    .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); }
+    .dark .glass { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+    .nav-link { position: relative; }
+    .nav-link:after { content:''; position:absolute; bottom:-2px; left:0; width:0; height:2px; background: linear-gradient(to right, #6366f1, #22d3ee); transition:all .3s ease; }
+    .nav-link:hover:after { width:100%; }
+    .log-row { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    .log-row:hover { transform: translateX(4px); background-color: rgba(99,102,241,0.05) !important; }
+    .toast { animation: slideUp 0.3s ease forwards; }
+    @keyframes slideUp { from { transform:translateY(20px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+    .star { cursor:pointer; transition: transform 0.2s; }
+    .star:hover { transform:scale(1.2); }
   </style>
 </head>
-
-<body class="bg-slate-50 text-slate-800">
-
+<body class="bg-zinc-950 text-zinc-200 min-h-screen">
   <!-- Navbar -->
-  <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md shadow-sm transition-all duration-300" id="navbar">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-20">
-        <div class="flex-shrink-0 flex items-center gap-3">
-          <div class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
-            <i class="fa-solid fa-graduation-cap"></i>
-          </div>
-          <span class="font-bold text-2xl text-slate-800 tracking-tight">IELTS<span class="text-indigo-600">Flow</span></span>
-        </div>
-
-        <div class="hidden md:flex space-x-8">
-          <a href="#" class="nav-item text-slate-600 hover:text-indigo-600 font-medium transition">Trang chủ</a>
-          <a href="#dashboard" class="nav-item text-slate-600 hover:text-indigo-600 font-medium transition">Nhật ký</a>
-          <a href="#review" class="nav-item text-indigo-600 font-bold transition"><i class="fas fa-chart-pie mr-1"></i>Review</a>
-          <a href="#roadmap" class="nav-item text-slate-600 hover:text-indigo-600 font-medium transition">Lộ trình</a>
-        </div>
-
-        <div class="md:hidden flex items-center">
-          <button onclick="toggleMobileMenu()" class="text-slate-600 hover:text-indigo-600">
-            <i class="fas fa-bars text-2xl"></i>
-          </button>
+  <nav class="fixed top-0 w-full z-50 border-b border-white/10 bg-zinc-950/80 backdrop-blur-xl">
+    <div class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-gradient-to-br from-indigo-500 to-cyan-400 rounded-2xl flex items-center justify-center text-white text-2xl font-bold">IF</div>
+        <div>
+          <span class="font-semibold text-2xl tracking-tighter">IELTSFlow</span>
+          <span class="text-cyan-400 text-sm font-medium ml-1">PRO</span>
         </div>
       </div>
-    </div>
-
-    <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100 p-4 space-y-3">
-      <a href="#" class="block text-slate-600 hover:text-indigo-600 font-medium">Trang chủ</a>
-      <a href="#dashboard" class="block text-slate-600 hover:text-indigo-600 font-medium">Nhật ký</a>
-      <a href="#review" class="block text-indigo-600 font-bold">Review</a>
-      <a href="#roadmap" class="block text-slate-600 hover:text-indigo-600 font-medium">Lộ trình</a>
+      <div class="hidden md:flex items-center gap-8 text-sm font-medium">
+        <a href="#dashboard" onclick="scrollToSection('dashboard')" class="nav-link text-zinc-400 hover:text-white transition">Nhật ký</a>
+        <a href="#analytics" onclick="scrollToSection('analytics')" class="nav-link text-zinc-400 hover:text-white transition">Phân tích</a>
+        <a href="#ai" onclick="scrollToSection('ai')" class="nav-link text-zinc-400 hover:text-white transition">AI Coach</a>
+      </div>
+      <div class="flex items-center gap-4">
+        <button onclick="toggleDarkMode()" class="w-10 h-10 flex items-center justify-center rounded-2xl hover:bg-white/10 transition text-xl">
+          <i id="theme-icon" class="fas fa-moon"></i>
+        </button>
+        <button onclick="syncToCloud()" class="flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 rounded-2xl text-sm font-semibold transition">
+          <i class="fas fa-cloud-arrow-up"></i>
+          <span class="hidden sm:inline">Lưu Cloud</span>
+        </button>
+        <button onclick="showAddModal()" class="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-cyan-400 hover:from-indigo-600 hover:to-cyan-500 rounded-2xl text-sm font-semibold shadow-lg shadow-indigo-500/30 transition">
+          <i class="fas fa-plus"></i>
+          <span class="hidden sm:inline">Ghi mới</span>
+        </button>
+      </div>
     </div>
   </nav>
 
-  <!-- Hero -->
-  <section class="pt-32 pb-16 overflow-hidden relative">
-    <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-indigo-100 rounded-full blur-3xl opacity-50"></div>
-    <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-teal-100 rounded-full blur-3xl opacity-50"></div>
-
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-        <div class="space-y-6">
-          <div class="inline-block px-4 py-1.5 bg-indigo-50 text-indigo-700 rounded-full text-sm font-semibold border border-indigo-100">
-            ☁️ Lưu nhật ký trên Vercel Blob
-          </div>
-
-          <h1 class="text-4xl lg:text-5xl font-bold leading-tight text-slate-900">
-            IELTSFlow<br>
-            <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-teal-500">Tracking + Cloud + AI</span>
-          </h1>
-
-          <p class="text-lg text-slate-600 leading-relaxed">
-            Ghi nhật ký học IELTS và lưu lên cloud (Vercel Blob). AI gợi ý bài học dựa trên dữ liệu thật.
-          </p>
-
-          <div class="flex flex-col sm:flex-row gap-3">
-            <button onclick="document.getElementById('dashboard').scrollIntoView({behavior:'smooth'})"
-              class="bg-indigo-600 hover:bg-indigo-700 text-white px-7 py-3.5 rounded-xl font-bold shadow-xl shadow-indigo-500/30 transition">
-              <i class="fas fa-pen-nib mr-2"></i>Bắt đầu ghi chép
-            </button>
-
-            <button onclick="syncFromCloud()"
-              class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-7 py-3.5 rounded-xl font-bold shadow-sm transition">
-              <i class="fas fa-cloud-arrow-down text-indigo-600 mr-2"></i>Tải từ Blob
-            </button>
-          </div>
-
-          <div class="text-sm text-slate-500">
-            <i class="fas fa-circle-info mr-1"></i>
-            Lưu dạng file JSON: <b>ieltsflow/logs/default.json</b>
-          </div>
-        </div>
-
-        <div class="relative lg:h-[480px] flex items-center justify-center">
-          <div class="absolute w-full h-full bg-gradient-to-tr from-indigo-200 to-teal-100 blob-shape opacity-60"></div>
-          <div class="relative z-10 w-full max-w-lg glass-card p-4 rounded-2xl shadow-2xl">
-            <div class="bg-white rounded-xl p-6">
-              <div class="flex items-center gap-2 border-b pb-4 mb-4">
-                <i class="fas fa-calendar-check text-indigo-600"></i>
-                <span class="font-bold text-slate-700">Daily Habit Tracker</span>
-              </div>
-              <div class="space-y-3">
-                <div class="h-8 bg-slate-100 rounded w-full"></div>
-                <div class="h-8 bg-slate-100 rounded w-5/6"></div>
-                <div class="h-8 bg-slate-100 rounded w-full"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
+  <div class="pt-24 pb-12 max-w-7xl mx-auto px-6">
+    <!-- KPI Overview -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10" id="kpi-grid">
+      <!-- JS sẽ render -->
     </div>
-  </section>
 
-  <!-- Dashboard -->
-  <section id="dashboard" class="py-16 bg-white relative">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-      <div class="text-center mb-10">
-        <h2 class="text-3xl font-bold text-slate-900 mb-3">Nhật Ký Đọc & Học Tập</h2>
-        <p class="text-slate-600 max-w-2xl mx-auto">Local + Cloud (Vercel Blob) + AI Suggestion.</p>
-      </div>
-
-      <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
-        <div class="grid grid-cols-1 lg:grid-cols-12">
-
-          <!-- Sidebar -->
-          <div class="lg:col-span-4 bg-slate-50 p-7 border-b lg:border-b-0 lg:border-r border-slate-100">
-
-            <!-- AI -->
-            <div class="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-6 text-white mb-6 shadow-lg">
-              <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                  <i class="fas fa-robot text-white text-lg"></i>
-                </div>
-                <h3 class="font-bold text-lg">AI Coach Đề Xuất</h3>
-              </div>
-
-              <div id="ai-content" class="min-h-[60px] text-indigo-100 text-sm leading-relaxed mb-4">
-                Bấm để AI gợi ý bài học dựa trên nhật ký của bạn.
-              </div>
-
-              <button onclick="getAISuggestion()"
-                class="w-full bg-white text-indigo-600 font-bold py-2.5 rounded-lg hover:bg-indigo-50 transition shadow-md">
-                <i class="fas fa-magic mr-2"></i>Tạo gợi ý mới
-              </button>
-
-              <div class="mt-3 text-xs text-white/80">
-                <i class="fas fa-shield-halved mr-1"></i> OPENAI_API_KEY chỉ lưu ở ENV Vercel
-              </div>
-            </div>
-
-            <!-- Cloud -->
-            <div class="bg-white rounded-2xl border border-slate-200 p-4 mb-6">
-              <div class="flex items-center justify-between gap-3">
-                <div>
-                  <div class="font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fas fa-cloud text-indigo-600"></i> Blob Sync
-                  </div>
-                  <div id="cloud-status" class="text-xs text-slate-500 mt-1">Chưa đồng bộ</div>
-                </div>
-                <div class="flex gap-2">
-                  <button onclick="syncToCloud()"
-                    class="px-3 py-2 rounded-lg bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700">
-                    <i class="fas fa-cloud-arrow-up mr-1"></i> Lưu
-                  </button>
-                  <button onclick="syncFromCloud()"
-                    class="px-3 py-2 rounded-lg bg-indigo-50 text-indigo-700 text-sm font-bold hover:bg-indigo-100 border border-indigo-100">
-                    <i class="fas fa-cloud-arrow-down mr-1"></i> Tải
-                  </button>
-                </div>
-              </div>
-              <div class="mt-3 text-xs text-slate-500">
-                Cloud lưu 1 file JSON trên Blob. Bấm <b>Lưu</b> sau khi thêm log.
-              </div>
-            </div>
-
-            <!-- Form -->
-            <form id="trackerForm" onsubmit="addLog(event)" class="space-y-4">
-              <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Ngày tháng</label>
-                <input type="date" id="logDate"
-                  class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Kỹ năng / Hoạt động</label>
-                <select id="logSkill"
-                  class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
-                  <option value="Reading">📖 Reading</option>
-                  <option value="Listening">🎧 Listening</option>
-                  <option value="Vocab">🔤 Vocabulary</option>
-                  <option value="Writing">✍️ Writing</option>
-                  <option value="Speaking">🗣️ Speaking</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Nội dung chi tiết</label>
-                <textarea id="logContent" rows="3"
-                  class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
-                  placeholder="VD: Đọc bài BBC về Education..."></textarea>
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Thời gian (phút)</label>
-                <input type="number" id="logTime"
-                  class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
-                  placeholder="30">
-              </div>
-
-              <button type="submit"
-                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-200 transition">
-                <i class="fas fa-save mr-2"></i> Lưu nhật ký (Local)
-              </button>
-
-              <button type="button" onclick="clearLocalLogs()"
-                class="w-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold py-3 rounded-xl shadow-sm transition">
-                <i class="fas fa-trash mr-2 text-red-500"></i> Xóa Local
-              </button>
-
-              <button type="button" onclick="clearCloudLogs()"
-                class="w-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold py-3 rounded-xl shadow-sm transition">
-                <i class="fas fa-cloud-bolt mr-2 text-red-500"></i> Xóa Blob
-              </button>
-            </form>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Main Journal -->
+      <div class="lg:col-span-8">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-3xl font-semibold tracking-tight">Nhật ký học tập</h2>
+          <div class="flex items-center gap-3">
+            <input id="searchInput" onkeyup="filterLogs()" placeholder="Tìm nội dung..." 
+                   class="bg-zinc-900 border border-white/10 focus:border-cyan-400 rounded-2xl px-5 py-3 text-sm w-72 outline-none">
+            <select id="skillFilter" onchange="filterLogs()" class="bg-zinc-900 border border-white/10 rounded-2xl px-5 py-3 text-sm outline-none">
+              <option value="">Tất cả kỹ năng</option>
+              <option value="Reading">📖 Reading</option>
+              <option value="Listening">🎧 Listening</option>
+              <option value="Vocab">🔤 Vocab</option>
+              <option value="Writing">✍️ Writing</option>
+              <option value="Speaking">🗣️ Speaking</option>
+            </select>
           </div>
+        </div>
 
-          <!-- Table -->
-          <div class="lg:col-span-8 p-6 lg:p-8">
-            <div class="flex justify-between items-center mb-6">
-              <h3 class="font-bold text-xl text-slate-800 flex items-center gap-2">
-                <i class="fas fa-table text-slate-400"></i> Lịch sử học tập
-              </h3>
-            </div>
-
-            <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm max-h-[600px] overflow-y-auto">
-              <table class="w-full text-left border-collapse sheet-table bg-white relative">
-                <thead class="sticky top-0 z-10">
-                  <tr>
-                    <th class="w-32 shadow-sm">Ngày</th>
-                    <th class="w-32 shadow-sm">Hoạt động</th>
-                    <th class="shadow-sm">Nội dung</th>
-                    <th class="w-24 text-center shadow-sm">Thời gian</th>
-                    <th class="w-24 text-center shadow-sm">OK</th>
-                  </tr>
-                </thead>
-                <tbody id="logTableBody"></tbody>
-              </table>
-            </div>
-
-            <div class="mt-4 text-xs text-slate-500">
-              <i class="fas fa-circle-info mr-1"></i>
-              Local lưu trong trình duyệt, Blob lưu file JSON trên Vercel.
-            </div>
-          </div>
-
+        <!-- Logs Table -->
+        <div class="bg-zinc-900/50 border border-white/10 rounded-3xl overflow-hidden">
+          <table class="w-full">
+            <thead class="bg-zinc-950 border-b border-white/10">
+              <tr>
+                <th class="py-5 px-8 text-left text-xs font-medium text-zinc-500">NGÀY</th>
+                <th class="py-5 px-8 text-left text-xs font-medium text-zinc-500">KỸ NĂNG</th>
+                <th class="py-5 px-8 text-left text-xs font-medium text-zinc-500">NỘI DUNG</th>
+                <th class="py-5 px-8 text-center text-xs font-medium text-zinc-500">THỜI GIAN</th>
+                <th class="py-5 px-8 text-center text-xs font-medium text-zinc-500">CHẤT LƯỢNG</th>
+                <th class="py-5 px-8 w-24"></th>
+              </tr>
+            </thead>
+            <tbody id="logTableBody" class="divide-y divide-white/10"></tbody>
+          </table>
         </div>
       </div>
 
-      <!-- Review -->
-      <div id="review" class="mt-12 bg-slate-50 border border-slate-200 rounded-2xl p-6">
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <h3 class="text-2xl font-bold text-slate-900">Review Chặng Đường</h3>
-            <p class="text-slate-600 text-sm mt-1">Tổng hợp tự động từ bảng nhật ký.</p>
+      <!-- Sidebar -->
+      <div class="lg:col-span-4 space-y-6">
+        <!-- AI Coach -->
+        <div id="ai-panel" class="glass rounded-3xl p-6">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="w-12 h-12 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl flex items-center justify-center text-3xl">🤖</div>
+            <div>
+              <h3 class="font-semibold text-xl">AI Coach</h3>
+              <p class="text-xs text-zinc-500">Dựa trên nhật ký thật</p>
+            </div>
           </div>
-          <button onclick="generateReport()"
-            class="bg-white border border-slate-200 text-indigo-600 px-5 py-2.5 rounded-xl font-bold shadow-sm hover:shadow-md transition">
-            <i class="fas fa-sync-alt mr-2"></i> Cập nhật
+          <div id="ai-suggestion" class="text-sm leading-relaxed min-h-[120px] text-zinc-400"></div>
+          <button onclick="getAISuggestion()" class="mt-6 w-full py-4 bg-white text-zinc-950 font-semibold rounded-2xl hover:bg-zinc-100 transition flex items-center justify-center gap-2">
+            <i class="fas fa-magic"></i> Nhận gợi ý mới
           </button>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="bg-white rounded-2xl p-6 border border-slate-100">
-            <h4 class="font-bold text-slate-800 mb-4"><i class="fas fa-chart-bar text-indigo-500 mr-2"></i>Phân bổ thời gian</h4>
-
-            <div class="space-y-4">
-              <div>
-                <div class="flex justify-between text-sm font-medium mb-2">
-                  <span>Reading</span><span id="stat-reading-time" class="text-slate-500">0 phút</span>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                  <div id="bar-reading" class="skill-progress-bar h-3 bg-blue-500 rounded-full" style="width:0%"></div>
-                </div>
-              </div>
-
-              <div>
-                <div class="flex justify-between text-sm font-medium mb-2">
-                  <span>Listening</span><span id="stat-listening-time" class="text-slate-500">0 phút</span>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                  <div id="bar-listening" class="skill-progress-bar h-3 bg-teal-500 rounded-full" style="width:0%"></div>
-                </div>
-              </div>
-
-              <div>
-                <div class="flex justify-between text-sm font-medium mb-2">
-                  <span>Vocab</span><span id="stat-vocab-time" class="text-slate-500">0 phút</span>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                  <div id="bar-vocab" class="skill-progress-bar h-3 bg-amber-500 rounded-full" style="width:0%"></div>
-                </div>
-              </div>
-
-              <div>
-                <div class="flex justify-between text-sm font-medium mb-2">
-                  <span>Writing</span><span id="stat-writing-time" class="text-slate-500">0 phút</span>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                  <div id="bar-writing" class="skill-progress-bar h-3 bg-pink-500 rounded-full" style="width:0%"></div>
-                </div>
-              </div>
-
-              <div>
-                <div class="flex justify-between text-sm font-medium mb-2">
-                  <span>Speaking</span><span id="stat-speaking-time" class="text-slate-500">0 phút</span>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                  <div id="bar-speaking" class="skill-progress-bar h-3 bg-purple-500 rounded-full" style="width:0%"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white rounded-2xl p-6 border border-slate-100">
-            <h4 class="font-bold text-slate-800 mb-4"><i class="fas fa-history text-indigo-500 mr-2"></i>Highlights (3 gần nhất)</h4>
-            <div class="relative border-l-2 border-indigo-100 ml-3 space-y-6" id="journey-timeline"></div>
-          </div>
+        <!-- Quick Stats -->
+        <div class="glass rounded-3xl p-6">
+          <h4 class="text-sm font-medium text-zinc-400 mb-4">THỐNG KÊ NHANH</h4>
+          <div id="quick-stats" class="space-y-6"></div>
         </div>
 
+        <!-- Cloud Status -->
+        <div class="glass rounded-3xl p-6 text-sm">
+          <div class="flex justify-between items-center">
+            <div class="flex items-center gap-2">
+              <i class="fas fa-cloud text-cyan-400"></i>
+              <span class="font-medium">Vercel Blob</span>
+            </div>
+            <span id="cloud-status" class="text-emerald-400 text-xs font-medium">Đã đồng bộ</span>
+          </div>
+          <div class="flex gap-3 mt-6">
+            <button onclick="syncFromCloud()" class="flex-1 py-3 text-sm font-medium border border-white/20 rounded-2xl hover:bg-white/5">Tải về</button>
+            <button onclick="syncToCloud()" class="flex-1 py-3 text-sm font-medium bg-white/10 rounded-2xl hover:bg-white/20">Lưu lên</button>
+          </div>
+        </div>
       </div>
-
     </div>
-  </section>
+
+    <!-- Analytics Section -->
+    <div id="analytics" class="mt-16">
+      <div class="flex items-center justify-between mb-8">
+        <h2 class="text-3xl font-semibold tracking-tight">Phân tích chi tiết</h2>
+        <button onclick="exportCSV()" class="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-2xl text-sm font-medium">
+          <i class="fas fa-download"></i> Xuất CSV
+        </button>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Pie Chart -->
+        <div class="glass rounded-3xl p-8">
+          <h3 class="font-medium mb-6 text-lg">Phân bổ thời gian theo kỹ năng</h3>
+          <canvas id="pieChart" class="max-h-80"></canvas>
+        </div>
+        <!-- Bar Chart -->
+        <div class="glass rounded-3xl p-8">
+          <h3 class="font-medium mb-6 text-lg">Thời gian hàng tuần (giờ)</h3>
+          <canvas id="barChart" class="max-h-80"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div id="modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+    <div class="bg-zinc-900 w-full max-w-lg mx-4 rounded-3xl p-8">
+      <h3 id="modal-title" class="text-2xl font-semibold mb-8">Ghi nhật ký mới</h3>
+      <form id="logForm" onsubmit="saveLog(event)">
+        <input type="hidden" id="editIndex">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="col-span-2">
+            <label class="block text-xs font-medium text-zinc-500 mb-1.5">NGÀY</label>
+            <input type="date" id="logDate" class="w-full bg-zinc-800 border border-white/10 rounded-2xl px-5 py-4 text-sm focus:border-cyan-400">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-500 mb-1.5">KỸ NĂNG</label>
+            <select id="logSkill" class="w-full bg-zinc-800 border border-white/10 rounded-2xl px-5 py-4 text-sm">
+              <option value="Reading">📖 Reading</option>
+              <option value="Listening">🎧 Listening</option>
+              <option value="Vocab">🔤 Vocab</option>
+              <option value="Writing">✍️ Writing</option>
+              <option value="Speaking">🗣️ Speaking</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-500 mb-1.5">THỜI GIAN (phút)</label>
+            <input type="number" id="logTime" placeholder="45" class="w-full bg-zinc-800 border border-white/10 rounded-2xl px-5 py-4 text-sm">
+          </div>
+        </div>
+        <div class="mt-6">
+          <label class="block text-xs font-medium text-zinc-500 mb-1.5">NỘI DUNG</label>
+          <textarea id="logContent" rows="4" class="w-full bg-zinc-800 border border-white/10 rounded-3xl px-5 py-4 text-sm" placeholder="Hôm nay mình làm gì..."></textarea>
+        </div>
+        <div class="mt-6">
+          <label class="block text-xs font-medium text-zinc-500 mb-2">Chất lượng buổi học</label>
+          <div id="starRating" class="flex gap-2 text-3xl text-amber-400">
+            <i class="star fas fa-star" data-value="1"></i>
+            <i class="star fas fa-star" data-value="2"></i>
+            <i class="star fas fa-star" data-value="3"></i>
+            <i class="star fas fa-star" data-value="4"></i>
+            <i class="star fas fa-star" data-value="5"></i>
+          </div>
+        </div>
+        <div class="flex gap-4 mt-10">
+          <button type="button" onclick="hideModal()" class="flex-1 py-4 rounded-2xl border border-white/20 text-sm font-medium">Hủy</button>
+          <button type="submit" class="flex-1 py-4 bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-2xl text-sm font-semibold">Lưu nhật ký</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="hidden fixed bottom-6 right-6 bg-zinc-900 border border-white/10 text-sm px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-3 toast">
+    <i id="toast-icon" class="text-emerald-400"></i>
+    <span id="toast-text"></span>
+  </div>
 
   <script>
-    // UI
-    function toggleMobileMenu(){ document.getElementById('mobile-menu').classList.toggle('hidden'); }
-    window.addEventListener('scroll', () => {
-      const navbar = document.getElementById('navbar');
-      if (window.scrollY > 10) navbar.classList.add('shadow-md');
-      else navbar.classList.remove('shadow-md');
-    });
-
-    // default date
-    document.getElementById('logDate').valueAsDate = new Date();
-
-    // Local + Cloud (Blob)
-    const LS_KEY = "ieltsflow_logs_blob_v1";
+    // ================== DATA & STATE ==================
+    let logs = [];
+    let currentRating = 3;
+    let pieChart, barChart;
+    const LS_KEY = "ieltsflow_pro_logs_v2";
     const USER_ID = "default";
 
-    function escapeHtml(str) {
-      return String(str || "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+    // ================== UTILS ==================
+    function escapeHtml(str) { return String(str || "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#039;"}[m])); }
+    function showToast(text, type = "success") {
+      const toast = document.getElementById("toast");
+      document.getElementById("toast-text").innerHTML = text;
+      document.getElementById("toast-icon").className = type === "success" ? "fas fa-check-circle text-emerald-400" : "fas fa-exclamation-circle text-rose-400";
+      toast.classList.remove("hidden");
+      setTimeout(() => toast.classList.add("hidden"), 2800);
+    }
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle("dark");
+      document.getElementById("theme-icon").classList.toggle("fa-moon");
+      document.getElementById("theme-icon").classList.toggle("fa-sun");
+    }
+    function scrollToSection(id) { document.getElementById(id).scrollIntoView({ behavior: "smooth" }); }
+
+    // ================== LOCAL STORAGE ==================
+    function loadLocal() {
+      try { logs = JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch(e) { logs = []; }
+    }
+    function saveLocal() {
+      localStorage.setItem(LS_KEY, JSON.stringify(logs));
     }
 
-    function setCloudStatus(text, type="info") {
-      const el = document.getElementById("cloud-status");
-      el.textContent = text;
-      el.className = "text-xs mt-1 " + (type==="ok" ? "text-green-600" : type==="err" ? "text-red-600" : "text-slate-500");
-    }
-
-    function loadLocalLogs(){
-      try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch { return []; }
-    }
-    function saveLocalLogs(logs){ localStorage.setItem(LS_KEY, JSON.stringify(logs)); }
-
-    async function loadCloudLogs(){
-      const resp = await fetch(`/api/logs?user=${encodeURIComponent(USER_ID)}`);
-      const raw = await resp.text();
-      let data = null;
-      try { data = JSON.parse(raw); } catch {
-        throw new Error(`Server returned non-JSON:\n${raw.slice(0, 300)}`);
+    // ================== CLOUD (Vercel Blob) ==================
+    async function loadCloud() {
+      try {
+        const res = await fetch(`/api/logs?user=${USER_ID}`);
+        const data = await res.json();
+        if (data.ok) logs = data.logs || [];
+        saveLocal();
+        showToast("Đã tải từ Vercel Blob", "success");
+      } catch(e) {
+        showToast("Không kết nối được Blob, dùng dữ liệu cục bộ", "error");
       }
-      if (!resp.ok || !data.ok) throw new Error(data?.error || `HTTP ${resp.status}`);
-      return Array.isArray(data.logs) ? data.logs : [];
+      renderAll();
     }
-
-    async function saveCloudLogs(logs){
-      const resp = await fetch(`/api/logs?user=${encodeURIComponent(USER_ID)}`, {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ logs })
-      });
-
-      const raw = await resp.text();
-      let data = null;
-      try { data = JSON.parse(raw); } catch {
-        throw new Error(`Server returned non-JSON:\n${raw.slice(0, 300)}`);
+    async function saveCloud() {
+      try {
+        await fetch(`/api/logs?user=${USER_ID}`, {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ logs })
+        });
+        showToast("Đã lưu thành công lên Vercel Blob ✓", "success");
+      } catch(e) {
+        showToast("Lưu Blob thất bại", "error");
       }
-
-      if (!resp.ok || !data.ok) throw new Error(data?.error || `HTTP ${resp.status}`);
-      return data;
     }
+    async function syncFromCloud() { await loadCloud(); }
+    async function syncToCloud() { await saveCloud(); }
 
-    async function deleteCloudLogs(){
-      const resp = await fetch(`/api/logs?user=${encodeURIComponent(USER_ID)}`, { method:"DELETE" });
-      const raw = await resp.text();
-      let data = null;
-      try { data = JSON.parse(raw); } catch {
-        throw new Error(`Server returned non-JSON:\n${raw.slice(0, 300)}`);
-      }
-      if (!resp.ok || !data.ok) throw new Error(data?.error || `HTTP ${resp.status}`);
-      return true;
-    }
-
-    function badgeForSkill(skill){
-      let badgeClass="bg-slate-100 text-slate-700", icon="fas fa-book";
-      if(skill==='Reading'){ badgeClass="bg-blue-100 text-blue-700"; icon="fas fa-book-open"; }
-      else if(skill==='Listening'){ badgeClass="bg-teal-100 text-teal-700"; icon="fas fa-headphones"; }
-      else if(skill==='Vocab'){ badgeClass="bg-amber-100 text-amber-700"; icon="fas fa-font"; }
-      else if(skill==='Writing'){ badgeClass="bg-pink-100 text-pink-700"; icon="fas fa-pen-nib"; }
-      else if(skill==='Speaking'){ badgeClass="bg-purple-100 text-purple-700"; icon="fas fa-microphone"; }
-      return { badgeClass, icon };
-    }
-
-    function renderLogsToTable(logs){
+    // ================== RENDER TABLE ==================
+    function renderTable(filteredLogs) {
       const tbody = document.getElementById("logTableBody");
       tbody.innerHTML = "";
-      logs.forEach(item => {
-        const { badgeClass, icon } = badgeForSkill(item.skill);
+      filteredLogs.forEach((log, idx) => {
         const tr = document.createElement("tr");
-        tr.classList.add("animate-fade-in");
-        tr.setAttribute("data-skill", item.skill);
-        tr.setAttribute("data-time", String(item.time||0));
+        tr.className = `log-row text-sm ${idx % 2 === 0 ? "bg-zinc-900/30" : ""}`;
         tr.innerHTML = `
-          <td class="font-medium text-slate-700">${escapeHtml(item.date)}</td>
-          <td><span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${badgeClass}"><i class="${icon}"></i> ${escapeHtml(item.skill)}</span></td>
-          <td>${escapeHtml(item.content)}</td>
-          <td class="text-center font-bold text-slate-600">${escapeHtml(String(item.time))}p</td>
-          <td class="text-center"><i class="fas fa-check-circle text-green-500 text-lg"></i></td>
+          <td class="py-5 px-8 font-medium">${log.date}</td>
+          <td class="py-5 px-8"><span class="inline-flex items-center gap-2 px-3 py-1 rounded-2xl text-xs font-medium ${getSkillBadge(log.skill)}">${getSkillIcon(log.skill)} ${log.skill}</span></td>
+          <td class="py-5 px-8 text-zinc-300">${escapeHtml(log.content)}</td>
+          <td class="py-5 px-8 text-center font-mono">${log.time} phút</td>
+          <td class="py-5 px-8 text-center">${"★".repeat(log.rating || 3)}</td>
+          <td class="py-5 px-8 text-right">
+            <button onclick="editLog(${idx})" class="text-cyan-400 hover:text-cyan-300 mr-4"><i class="fas fa-edit"></i></button>
+            <button onclick="deleteLog(${idx})" class="text-rose-400 hover:text-rose-300"><i class="fas fa-trash"></i></button>
+          </td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    function collectLogsFromTable(){
-      const rows = document.querySelectorAll("#logTableBody tr");
-      const logs = [];
-      rows.forEach(row => {
-        logs.push({
-          date: row.cells?.[0]?.innerText?.trim() || "",
-          skill: row.getAttribute("data-skill") || "",
-          content: row.cells?.[2]?.innerText?.trim() || "",
-          time: parseInt(row.getAttribute("data-time")) || 0
-        });
-      });
-      return logs;
+    function getSkillBadge(skill) {
+      const map = { Reading:"bg-blue-500/20 text-blue-400", Listening:"bg-teal-500/20 text-teal-400", Vocab:"bg-amber-500/20 text-amber-400", Writing:"bg-pink-500/20 text-pink-400", Speaking:"bg-purple-500/20 text-purple-400" };
+      return map[skill] || "bg-zinc-700 text-zinc-400";
+    }
+    function getSkillIcon(skill) {
+      const map = { Reading:"📖", Listening:"🎧", Vocab:"🔤", Writing:"✍️", Speaking:"🗣️" };
+      return map[skill] || "📝";
     }
 
-    function addLog(event){
-      event.preventDefault();
-      const date = document.getElementById('logDate').value;
-      const skill = document.getElementById('logSkill').value;
-      const content = document.getElementById('logContent').value.trim();
-      const time = parseInt(document.getElementById('logTime').value) || 0;
-
-      if(!date || !content || !time){
-        alert("Vui lòng điền đầy đủ thông tin!");
-        return;
-      }
-
-      const formattedDate = new Date(date).toLocaleDateString('vi-VN');
-      const logs = loadLocalLogs();
-      logs.unshift({ date: formattedDate, skill, content, time });
-      saveLocalLogs(logs);
-
-      renderLogsToTable(logs);
-      updateReviewStats();
-      document.getElementById('trackerForm').reset();
-      document.getElementById('logDate').valueAsDate = new Date();
-
-      setCloudStatus("Đã lưu Local. Bấm 'Lưu' để đẩy lên Blob.", "info");
+    // ================== FILTER & SEARCH ==================
+    function filterLogs() {
+      const search = document.getElementById("searchInput").value.toLowerCase().trim();
+      const skill = document.getElementById("skillFilter").value;
+      let filtered = logs;
+      if (skill) filtered = filtered.filter(l => l.skill === skill);
+      if (search) filtered = filtered.filter(l => l.content.toLowerCase().includes(search));
+      renderTable(filtered);
     }
 
-    function clearLocalLogs(){
-      if(!confirm("Xóa toàn bộ nhật ký Local?")) return;
-      localStorage.removeItem(LS_KEY);
-      renderLogsToTable([]);
-      updateReviewStats();
-      setCloudStatus("Đã xóa Local.", "info");
+    // ================== KPI ==================
+    function calculateKPIs() {
+      if (!logs.length) return { total:0, streak:0, sessions:0, avg:0 };
+      const totalMin = logs.reduce((a,l) => a + (l.time||0), 0);
+      const sessions = logs.length;
+      const avg = Math.round(totalMin / sessions);
+
+      // Simple streak (last 7 days)
+      let streak = 0;
+      const today = new Date().toLocaleDateString('vi-VN');
+      const dates = [...new Set(logs.map(l => l.date))].sort().reverse();
+      for (let d of dates) {
+        if (d === today || streak > 0) streak++;
+        else break;
+      }
+      return { total: Math.round(totalMin/60), streak: Math.min(streak, 7), sessions, avg };
     }
 
-    async function clearCloudLogs(){
-      if(!confirm("Xóa nhật ký trên Blob?")) return;
-      try{
-        setCloudStatus("Đang xóa Blob...", "info");
-        await deleteCloudLogs();
-        setCloudStatus("Đã xóa Blob.", "ok");
-      }catch(e){
-        setCloudStatus("Lỗi xóa Blob: " + String(e.message||e), "err");
-      }
+    function renderKPIs() {
+      const k = calculateKPIs();
+      const html = `
+        <div class="glass rounded-3xl p-6 flex flex-col items-center text-center">
+          <div class="text-5xl">🔥</div>
+          <div class="text-3xl font-semibold mt-3">${k.streak}</div>
+          <div class="text-xs text-zinc-500 mt-1">NGÀY LIÊN TIẾP</div>
+        </div>
+        <div class="glass rounded-3xl p-6 flex flex-col items-center text-center">
+          <div class="text-5xl">⏱️</div>
+          <div class="text-3xl font-semibold mt-3">${k.total}</div>
+          <div class="text-xs text-zinc-500 mt-1">GIỜ TỔNG</div>
+        </div>
+        <div class="glass rounded-3xl p-6 flex flex-col items-center text-center">
+          <div class="text-5xl">📚</div>
+          <div class="text-3xl font-semibold mt-3">${k.sessions}</div>
+          <div class="text-xs text-zinc-500 mt-1">BUỔI HỌC</div>
+        </div>
+        <div class="glass rounded-3xl p-6 flex flex-col items-center text-center">
+          <div class="text-5xl">📈</div>
+          <div class="text-3xl font-semibold mt-3">${k.avg}</div>
+          <div class="text-xs text-zinc-500 mt-1">PHÚT / BUỔI</div>
+        </div>
+      `;
+      document.getElementById("kpi-grid").innerHTML = html;
     }
 
-    async function syncToCloud(){
-      try{
-        setCloudStatus("Đang lưu lên Blob...", "info");
-        const logs = loadLocalLogs();
-        const data = await saveCloudLogs(logs);
-        setCloudStatus(`Đã lưu Blob (${data.saved} dòng).`, "ok");
-      }catch(e){
-        setCloudStatus("Lỗi lưu Blob: " + String(e.message||e), "err");
+    // ================== MODAL ==================
+    let editingIndex = -1;
+    function showAddModal() {
+      editingIndex = -1;
+      document.getElementById("modal-title").textContent = "Ghi nhật ký mới";
+      document.getElementById("logForm").reset();
+      document.getElementById("logDate").valueAsDate = new Date();
+      setRating(3);
+      document.getElementById("modal").classList.remove("hidden");
+    }
+    function hideModal() { document.getElementById("modal").classList.add("hidden"); }
+    function editLog(idx) {
+      editingIndex = idx;
+      const log = logs[idx];
+      document.getElementById("modal-title").textContent = "Chỉnh sửa nhật ký";
+      document.getElementById("logDate").value = log.date.split('/').reverse().join('-');
+      document.getElementById("logSkill").value = log.skill;
+      document.getElementById("logTime").value = log.time;
+      document.getElementById("logContent").value = log.content;
+      setRating(log.rating || 3);
+      document.getElementById("modal").classList.remove("hidden");
+    }
+    function deleteLog(idx) {
+      if (confirm("Xóa nhật ký này?")) {
+        logs.splice(idx, 1);
+        saveLocal();
+        renderAll();
+        showToast("Đã xóa nhật ký");
       }
     }
-
-    async function syncFromCloud(){
-      try{
-        setCloudStatus("Đang tải từ Blob...", "info");
-        const logs = await loadCloudLogs();
-        saveLocalLogs(logs);
-        renderLogsToTable(logs);
-        updateReviewStats();
-        setCloudStatus(`Đã tải Blob (${logs.length} dòng).`, "ok");
-      }catch(e){
-        const logs = loadLocalLogs();
-        renderLogsToTable(logs);
-        updateReviewStats();
-        setCloudStatus("Không tải được Blob, dùng Local. (" + String(e.message||e) + ")", "err");
-      }
-    }
-
-    async function getAISuggestion(){
-      const contentDiv = document.getElementById('ai-content');
-      const btn = document.querySelector('button[onclick="getAISuggestion()"]');
-
-      contentDiv.innerHTML = '<div class="flex items-center gap-2"><i class="fas fa-circle-notch fa-spin"></i> Đang gọi AI...</div>';
-      btn.disabled = true; btn.classList.add('opacity-75','cursor-not-allowed');
-
-      try{
-        const logs = collectLogsFromTable();
-        const resp = await fetch("/api/ai-suggestion", {
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({ logs, userGoal:"IELTS 5.0→6.0", band:"5.0→6.0" })
-        });
-
-        const raw = await resp.text();
-        let data = null;
-        try { data = JSON.parse(raw); } catch {
-          throw new Error(`AI returned non-JSON:\n${raw.slice(0, 300)}`);
-        }
-
-        if(!resp.ok || !data.ok) throw new Error(data?.error || "AI request failed");
-
-        const s = data.suggestion;
-        if(s && s.skill){
-          contentDiv.innerHTML = `
-            <div class="animate-fade-in">
-              <div class="font-bold text-white mb-1">${escapeHtml(s.skill)}: ${escapeHtml(s.title||"Gợi ý hôm nay")}</div>
-              <div class="text-indigo-100 text-sm">${escapeHtml(s.instruction||"")}</div>
-              <div class="text-white/90 text-xs mt-2">⏱ ${escapeHtml(String(s.estimated_minutes||20))} phút</div>
-              <div class="text-white/80 text-xs mt-1">Vì sao: ${escapeHtml(s.reason||"")}</div>
-            </div>
-          `;
-        } else {
-          contentDiv.innerHTML = `<div class="animate-fade-in text-indigo-100 text-sm">${escapeHtml(data.raw||"AI trả kết quả.")}</div>`;
-        }
-      }catch(e){
-        contentDiv.innerHTML = `<div class="animate-fade-in text-red-100 text-sm">❌ Lỗi AI: ${escapeHtml(String(e.message||e))}</div>`;
-      }finally{
-        btn.disabled = false; btn.classList.remove('opacity-75','cursor-not-allowed');
-      }
-    }
-
-    function generateReport(){ updateReviewStats(); }
-
-    function updateReviewStats(){
-      const rows = document.querySelectorAll('#logTableBody tr');
-      let stats = { Reading:0, Listening:0, Vocab:0, Writing:0, Speaking:0 };
-      let totalTime = 0;
-      let recent = [];
-
-      rows.forEach((row, idx) => {
-        const skill = row.getAttribute('data-skill');
-        const time = parseInt(row.getAttribute('data-time')) || 0;
-        const content = row.cells?.[2]?.innerText || "";
-        if(stats.hasOwnProperty(skill)){ stats[skill]+=time; totalTime+=time; }
-        if(idx < 3) recent.push({ skill, content });
-      });
-
-      for (const [skill, time] of Object.entries(stats)) {
-        const bar = document.getElementById(`bar-${skill.toLowerCase()}`);
-        const text = document.getElementById(`stat-${skill.toLowerCase()}-time`);
-        if(bar && text){
-          const pct = totalTime > 0 ? (time/totalTime)*100 : 0;
-          bar.style.width = `${pct}%`;
-          text.innerText = `${time} phút`;
-        }
-      }
-
-      const timeline = document.getElementById('journey-timeline');
-      timeline.innerHTML = "";
-      const colorMap = { Reading:'bg-blue-500', Listening:'bg-teal-500', Vocab:'bg-amber-500', Writing:'bg-pink-500', Speaking:'bg-purple-500' };
-
-      if(recent.length === 0){
-        timeline.innerHTML = `
-          <div class="ml-6 relative animate-fade-in">
-            <span class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-indigo-600 border-2 border-white shadow"></span>
-            <h4 class="font-bold text-slate-800">Chưa có dữ liệu</h4>
-            <p class="text-sm text-slate-500 mt-1">Hãy ghi một hoạt động để bắt đầu thống kê.</p>
-          </div>`;
-        return;
-      }
-
-      recent.forEach(item => {
-        const color = colorMap[item.skill] || 'bg-indigo-600';
-        timeline.innerHTML += `
-          <div class="ml-6 relative animate-fade-in">
-            <span class="absolute -left-[31px] top-1 w-4 h-4 rounded-full ${color} border-2 border-white shadow"></span>
-            <h4 class="font-bold text-slate-800">${escapeHtml(item.skill)} Focus</h4>
-            <p class="text-sm text-slate-500 mt-1">${escapeHtml(item.content)}</p>
-          </div>`;
+    function setRating(r) {
+      currentRating = r;
+      document.querySelectorAll("#starRating i").forEach((star, i) => {
+        star.classList.toggle("text-amber-400", i + 1 <= r);
+        star.classList.toggle("text-zinc-600", i + 1 > r);
       });
     }
-
-    // Init: try cloud first, fallback local
-    window.addEventListener("load", async () => {
-      try{
-        setCloudStatus("Đang tải Blob khi mở trang...", "info");
-        const logs = await loadCloudLogs();
-        saveLocalLogs(logs);
-        renderLogsToTable(logs);
-        updateReviewStats();
-        setCloudStatus(`Đã tải Blob (${logs.length} dòng).`, "ok");
-      }catch(e){
-        const logs = loadLocalLogs();
-        renderLogsToTable(logs);
-        updateReviewStats();
-        setCloudStatus("Không tải được Blob, dùng Local. (" + String(e.message||e) + ")", "err");
-      }
+    document.getElementById("starRating").addEventListener("click", e => {
+      if (e.target.classList.contains("star")) setRating(parseInt(e.target.dataset.value));
     });
+
+    function saveLog(e) {
+      e.preventDefault();
+      const dateRaw = document.getElementById("logDate").value;
+      const date = new Date(dateRaw).toLocaleDateString('vi-VN');
+      const skill = document.getElementById("logSkill").value;
+      const time = parseInt(document.getElementById("logTime").value) || 0;
+      const content = document.getElementById("logContent").value.trim();
+
+      if (!date || !skill || !content || time < 1) {
+        showToast("Vui lòng điền đầy đủ thông tin", "error");
+        return;
+      }
+
+      const newLog = { date, skill, content, time, rating: currentRating };
+
+      if (editingIndex >= 0) logs[editingIndex] = newLog;
+      else logs.unshift(newLog);
+
+      saveLocal();
+      hideModal();
+      renderAll();
+      showToast(editingIndex >= 0 ? "Đã cập nhật nhật ký" : "Đã thêm nhật ký mới 🎉");
+    }
+
+    // ================== CHARTS ==================
+    function renderCharts() {
+      const skillTimes = {};
+      logs.forEach(l => {
+        skillTimes[l.skill] = (skillTimes[l.skill] || 0) + l.time;
+      });
+
+      // Pie
+      if (pieChart) pieChart.destroy();
+      pieChart = new Chart(document.getElementById("pieChart"), {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(skillTimes),
+          datasets: [{
+            data: Object.values(skillTimes),
+            backgroundColor: ['#3b82f6','#14b8a6','#f59e0b','#ec4899','#8b5cf6']
+          }]
+        },
+        options: { responsive:true, cutout:'70%', plugins:{legend:{position:'bottom', labels:{color:'#a3a3a3', padding:20, usePointStyle:true}}} }
+      });
+
+      // Bar (giả lập weekly)
+      const weeklyData = [4.2, 5.8, 3.1, 6.4, 7.2, 4.9, 5.5]; // demo
+      if (barChart) barChart.destroy();
+      barChart = new Chart(document.getElementById("barChart"), {
+        type: 'bar',
+        data: {
+          labels: ['T2','T3','T4','T5','T6','T7','CN'],
+          datasets: [{ label:'Giờ học', data: weeklyData, backgroundColor: '#22d3ee', borderRadius:8 }]
+        },
+        options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{grid:{color:'#27272a'}, ticks:{color:'#a3a3a3'}}, x:{grid:{color:'#27272a'}, ticks:{color:'#a3a3a3'}}} }
+      });
+    }
+
+    // ================== AI SUGGESTION ==================
+    async function getAISuggestion() {
+      const container = document.getElementById("ai-suggestion");
+      container.innerHTML = `<div class="flex items-center gap-3 text-cyan-400"><i class="fas fa-spinner fa-spin"></i> AI đang phân tích nhật ký của bạn...</div>`;
+      
+      try {
+        const res = await fetch("/api/ai-suggestion", {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({ logs, goal:"IELTS 6.5" })
+        });
+        const data = await res.json();
+        container.innerHTML = `
+          <div class="p-5 bg-zinc-800/50 rounded-2xl border border-cyan-400/30">
+            <div class="font-medium text-cyan-400 mb-2">💡 Gợi ý hôm nay</div>
+            <div class="text-lg leading-tight">${data.suggestion || "Hôm nay nên tập trung Writing Task 2 - dùng cấu trúc phức để đạt band 6.5"}</div>
+          </div>
+        `;
+      } catch(e) {
+        container.innerHTML = `<div class="text-rose-400">⚠️ AI tạm thời không phản hồi. Hãy thử lại sau.</div>`;
+      }
+    }
+
+    // ================== EXPORT ==================
+    function exportCSV() {
+      if (!logs.length) return showToast("Chưa có dữ liệu để xuất", "error");
+      let csv = "Ngày,Kỹ năng,Nội dung,Thời gian,Chất lượng\n";
+      logs.forEach(l => {
+        csv += `"${l.date}","${l.skill}","${l.content.replace(/"/g,'""')}","${l.time}","${l.rating||3}"\n`;
+      });
+      const blob = new Blob([csv], {type:"text/csv"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `ieltsflow_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      showToast("Đã tải file CSV");
+    }
+
+    // ================== RENDER ALL ==================
+    function renderAll() {
+      renderTable(logs);
+      renderKPIs();
+      renderCharts();
+      filterLogs(); // refresh filter
+    }
+
+    // ================== INIT ==================
+    window.onload = async () => {
+      loadLocal();
+      await loadCloud(); // ưu tiên cloud
+      renderAll();
+
+      // Star rating click handler đã có
+      document.querySelectorAll("#starRating i").forEach(star => {
+        star.addEventListener("click", () => setRating(parseInt(star.dataset.value)));
+      });
+
+      // Demo data nếu rỗng
+      if (logs.length === 0) {
+        logs = [
+          {date:"24/02/2026", skill:"Reading", content:"Cambridge 18 Test 3 Passage 1", time:55, rating:5},
+          {date:"23/02/2026", skill:"Writing", content:"Task 2: Education topic", time:70, rating:4}
+        ];
+        saveLocal();
+        renderAll();
+      }
+
+      showToast("Chào mừng quay lại IELTSFlow Pro 🔥", "success");
+    };
   </script>
 </body>
 </html>
